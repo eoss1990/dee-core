@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+【说明】：
+1、服务ID、方法ID及模板ID都为整数；
+2、Rest的参数来源包括3种：PathParam、QueryParam及BodyParam。
+
+【function配置说明】：
+1、type只能是GET、POST、PUT、DELETE；
+2、path中的变量格式为“{param}”；
+3、cfg_type可以为“writer”、“reader”和“”；
+4、response_type为“application/json”、“application/xml”、“text/plain”，或者他们的组合（中间用|隔开）；
+5、return_type为java的对象类型，默认为“java.lang.String”；
+6、deal_method为获取返回结果后的解析方法，配合service节点的deal_class使用；
+-->
+<root>
+    <services>
+        <service id="1" name="组织机构同步" deal_class="com.seeyon.v3x.dee.common.a8rest.parse.OrgParser">
+            <functions>
+                <function id="1" name="创建部门" type="POST" path="/orgDepartment"
+                          cfg_type="writer" response_type="application/json"/>
+
+                <function id="2" name="创建人员" type="POST" path="/orgMember"
+                          cfg_type="writer" response_type="application/json"/>
+
+                <function id="3" name="创建岗位" type="POST" path="/orgPost"
+                          cfg_type="writer" response_type="application/json" return_type="java.lang.String"/>
+
+                <function id="4" name="创建职务级别" type="POST" path="orgLevel"
+                          cfg_type="writer" response_type="application/json" return_type="java.lang.String"/>
+
+                <function id="5" name="导出人员信息" type="GET" path="/data/members/accountId/{[[dee_select_orgAccountId]]单位名称}"
+                          cfg_type="reader" response_type="application/xml" deal_method="membersTransport"/>
+
+                <function id="6" name="导出部门信息" type="GET" path="/data/departments/accountId/{[[dee_select_orgAccountId]]单位名称}"
+                          cfg_type="reader" response_type="application/xml" deal_method="deptTransport"/>
+
+                <function id="7" name="导出岗位信息" type="GET" path="/data/posts/accountId/{[[dee_select_orgAccountId]]单位名称}"
+                          cfg_type="reader" response_type="application/xml" deal_method="postsTransport"/>
+
+                <function id="8" name="导出职务级别信息" type="GET" path="data/orgLevels/accountId/{[[dee_select_orgAccountId]]单位名称}"
+                          cfg_type="reader" response_type="application/xml" deal_method="getOrgLevels"/>
+
+                <function id="9" name="导出组织模型信息" type="GET" path="/data/organization/accountId/{[[dee_select_orgAccountId]]单位名称}"
+                          cfg_type="reader" response_type="application/xml" deal_method="organizationTransport"/>
+
+                <function id="10" name="导入组织模型数据" type="POST" path="/data/organization/accountName/{单位名称}"
+                          cfg_type="writer" response_type="application/json"/>
+
+                <function id="11" name="导出人员通讯录" type="GET" path="/data/addressbook/{[[dee_select_orgAccountId]]单位名称}"
+                          cfg_type="reader" response_type="application/json" return_type="java.util.List"
+                          deal_method="addressTransport"/>
+            </functions>
+        </service>
+        <service id="2" name="表单" deal_class="com.seeyon.v3x.dee.common.a8rest.parse.OrgParser">
+            <functions>
+                <function id="201" name="批量发起流程表单" type="POST" path="/flow/batchlaunch/{A8表单模板号}"
+                          cfg_type="writer" response_type="application/json" return_type="java.util.List"
+                          show_tab="true"/>
+            </functions>
+        </service>
+    </services>
+    <templates>
+        <body id="1" name="组织机构同步:创建部门" type="application/json"><![CDATA[
+            {
+                "superior": {[[dee_select_departmentIdAndOrgAccountId]]父部门名称},
+                "name": "{[[dee_valid_orgDeptName]]部门名称}",
+                "sortId": {[[dee_valid_orgDeptSort]]排序号},
+                "orgAccountId": {[[dee_select_orgAccountId_readOnly]]单位名称},
+                "entityType": "Department"
+            }]]>
+        </body>
+        <body id="2" name="组织机构同步:创建人员" type="application/json"><![CDATA[
+            {
+                "orgDepartmentId":{[[dee_select_departmentIdAndOrgAccountIdNotOrgAccount]]部门名称},
+                "name": "{[[dee_valid_orgMemberName]]人员名称}",
+                "sortId": {[[dee_valid_orgMemberSort]]排序号},
+                "orgLevelId": {[[dee_select_orgLevelId]]职务级别名称},
+                "orgPostId": {[[dee_select_postId]]岗位名称},
+                "orgAccountId": {[[dee_select_orgAccountId_readOnly]]单位名称},
+                "loginName": "{[[dee_valid_orgMemberLoginName]]登陆名}"
+            }]]>
+        </body>
+        <body id="3" name="组织机构同步:创建岗位" type="application/json"><![CDATA[
+            {
+                "orgAccountId": {[[dee_select_orgAccountId]]单位名称},
+			    "name": "{[[dee_valid_orgPostName]]岗位名称}",
+			    "sortId": {[[dee_valid_orgPostSort]]排序号},
+			    "typeId": {岗位类型}
+            }]]>
+        </body>
+        <body id="4" name="组织机构同步:创建职务级别" type="application/json"><![CDATA[
+        {
+                "orgAccountId": {[[dee_select_orgAccountId]]单位名称},
+			    "name": "{[[dee_valid_orgLevelName]]职务级别名称}",
+			    "code": "{[[dee_valid_orgLevelCode]]职务级别代码}",
+			    "levelId": "{[[dee_valid_orgLevelId]]职务级别序号}",
+			    "sortId": {[[dee_valid_orgLevelSort]]排序号}
+        }]]>
+        </body>
+        <body id="5" name="组织机构同步:导入组织模型数据" type="application/xml" data="importData"><![CDATA[
+                ]]>
+        </body>
+        <body id="201" name="表单:批量发起流程表单" type="application/json"><![CDATA[
+            {
+                "subject": "{[[dee_valid_orgDeptName]]流程标题::0}",
+                "attachments": "{附件ID::1}",
+                "relateDoc": "{上传附件类型（col：协同，doc：文档中心）::1}",
+                "param": "{[[dee_valid_formSend]]是否立即发起(0:立即发起1:进入待发)::0}"
+            }]]>
+        </body>
+    </templates>
+</root>
